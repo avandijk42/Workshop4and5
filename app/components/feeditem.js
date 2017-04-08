@@ -130,7 +130,7 @@ render() {
             data.comments.map((comment, i) => {
               // i is comment's index in comments array
               return (
-                <Comment key={i} author={comment.author} postDate={comment.postDate}>{comment.contents}</Comment>
+                <Comment key={i} id={i} feedkey = {this.state._id} author={comment.author} postDate={comment.postDate} data={this.props.data.comments[i]}>{comment.contents}</Comment>
               );
             })
           }

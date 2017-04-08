@@ -103,6 +103,7 @@ export function postComment(feedItemId, author, contents, cb) {
   var feedItem = readDocument('feedItems', feedItemId);
   feedItem.comments.push({
     "author": author,
+    "likeCounter": [],
     "contents": contents,
     "postDate": new Date().getTime()
   });
@@ -145,4 +146,53 @@ export function unlikeFeedItem(feedItemId, userId, cb) {
   }
   // Return a resolved version of the likeCounter
   emulateServerReturn(feedItem.likeCounter.map((userId) => readDocument('users', userId)), cb);
+}
+
+export function likeComment(feedItemId, userId, commentIdx, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  // Normally, we would check if the user already liked this comment.
+  // But we will not do that in this mock server.
+  // ('push' modifies the array by adding userId to the end)
+  //alert(userId)
+  var likeCounter = feedItem.comments[commentIdx].likeCounter
+  var liked = false;
+  // Look for a likeCounter entry with userId 4 -- which is the
+  // current user.
+  //alert(this.state.comments[this.props.id].contents)
+  for (var i = 0; i < likeCounter.length; i++) {
+    //alert (likeCounter[i])
+    if (likeCounter[i] === 4) {
+      liked = true;
+      break;
+    }
+  }
+  if(!liked){
+    feedItem.comments[commentIdx].likeCounter.push(userId);
+  }
+  writeDocument('feedItems', feedItem);
+  // Return a resolved version of the likeCounter
+  //alert(feedItem.comments[commentIdx].likeCounter)
+  emulateServerReturn(feedItem.comments[commentIdx].likeCounter, cb);
+}
+
+/**
+ * Updates a feed item's likeCounter by removing the user from the likeCounter.
+ * Provides an updated likeCounter in the response.
+ */
+export function unlikeComment(feedItemId, userId, commentIdx, cb) {
+  var feedItem = readDocument('feedItems', feedItemId);
+  // Find the array index that contains the user's ID.
+  // (We didn't *resolve* the FeedItem object, so it is just an array of user IDs)
+  var userIndex = feedItem.comments[commentIdx].likeCounter.indexOf(userId);
+  // -1 means the user is *not* in the likeCounter, so we can simply avoid updating
+  // anything if that is the case: the user already doesn't like the item.
+  if (userIndex !== -1) {
+    // 'splice' removes items from an array. This removes 1 element starting from userIndex.
+
+    feedItem.comments[commentIdx].likeCounter.splice(userIndex, 1);
+    //alert(feedItem.comments[commentIdx].likeCounter)
+    writeDocument('feedItems', feedItem);
+  }
+  // Return a resolved version of the likeCounter
+  emulateServerReturn(feedItem.comments[commentIdx].likeCounter, cb);
 }
